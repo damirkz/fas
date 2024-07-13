@@ -81,6 +81,20 @@ const productsInOrder = [
         img:'https://picsum.photos/100/100',
         id:9
     },
+    {   
+        name: 'Булочка',
+        img:'https://picsum.photos/100/100',
+    },
+    {   
+        name: 'Булочка',
+        img:'https://picsum.photos/100/100',
+    },
+    {
+        name: 'Хлеб',
+        img:'https://picsum.photos/100/100',
+        id:22
+    },
+
     
 ]
 const productsWithNoBarcode = [
@@ -130,11 +144,8 @@ const productsWithNoBarcode = [
         id:9
     }
 ]
+const totalProducts = productsInOrder.length;
 
-function calculateTotalProducts() {
-    const collectedProductsWithNoBarcode = productsCollected.filter(product => !product.article);
-    return productsInOrder.length + collectedProductsWithNoBarcode.length;
-}
 let productsToBeCollected = productsInOrder
 let productsCollected = []
 $(document).ready(function() {
@@ -171,7 +182,7 @@ function renderOrderCollection() {
                         <span class="font-[Rubik] text-lg ">Собрано</span>
                         <span class="font-semibold font-[Rubik] text-lg" id="products-collected"></span>
                     </div>
-                    <button type="button" class="btn-alt w-[200px]" id="no-barcode-btn">КАФЕПЛЮС</button>
+                    <!--<button type="button" class="btn-alt w-[200px]" id="no-barcode-btn">КАФЕПЛЮС</button>-->
 
                     <button type="button" class="btn-primary w-[200px] add-product-manually">Добавить вручную</button>
                 </div>
@@ -187,7 +198,7 @@ function renderOrderCollection() {
     renderProductsToBeCollected();
     renderCollectedProducts();
     $('#order-number').text(`№${orderNum}`);
-    $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+    $('#products-collected').text(`${productsCollected.length}/${totalProducts}`);
     $('#product-barcode').focus();
     $('#product-barcode').on('input', function() {
         if(checkIfAllProductsCollected()) return;
@@ -200,8 +211,8 @@ function renderOrderCollection() {
         }
 
         if(product) {
-            productsCollected.push(product);
-            $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+            productsCollected.unshift(product);
+            $('#products-collected').text(`${productsCollected.length}/${totalProducts}`);
             productsToBeCollected = productsToBeCollected.filter(product => product.article != barcode);
             renderCollectedProducts();
             renderProductsToBeCollected();
@@ -221,9 +232,9 @@ function renderOrderCollection() {
         $('.manual-barcode').val(currentBarcode + number);
     });
 
-    $('body').on('click', '#no-barcode-btn', function() {
-        addProductsWithNoBarcode();
-    });
+    // $('body').on('click', '#no-barcode-btn', function() {
+    //     addProductsWithNoBarcode();
+    // });
 
     $('body').on('click', '.reset', function() {
         $('.manual-barcode').val('');
@@ -247,8 +258,8 @@ function renderOrderCollection() {
             return;
         }
         if(product) {
-            productsCollected.push(product);
-            $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+            productsCollected.unshift(product);
+            $('#products-collected').text(`${productsCollected.length}/${totalProducts}`);
             productsToBeCollected = productsToBeCollected.filter(product => product.article != barcode);
             renderCollectedProducts();
             renderProductsToBeCollected();
@@ -261,31 +272,55 @@ function renderOrderCollection() {
         }
     });
 
-    $('#search-products-with-no-barcode').on('input', function() {
-        let search = $(this).val().toLowerCase();
-        let filteredProducts = productsWithNoBarcode.filter(product => product.name.toLowerCase().includes(search));
-        renderProductsNoBarcode(filteredProducts);
-    });
-    $('body').on('click', '.add-product-with-no-barcode', function() {
-        let productIndex = $(this).closest('.product-with-no-barcode').index();
-        let product = productsWithNoBarcode[productIndex];
-        console.log(product);
-        productsCollected.push(product);
-        renderCollectedProducts();
-        $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+    // $('#search-products-with-no-barcode').on('input', function() {
+    //     let search = $(this).val().toLowerCase();
+    //     let filteredProducts = productsWithNoBarcode.filter(product => product.name.toLowerCase().includes(search));
+    //     renderProductsNoBarcode(filteredProducts);
+    // });
+    // $('body').on('click', '.add-product-with-no-barcode', function() {
+    //     let productIndex = $(this).closest('.product-with-no-barcode').index();
+    //     let product = productsWithNoBarcode[productIndex];
+    //     productsCollected.push(product);
+    //     renderCollectedProducts();
+    //     $('#products-collected').text(`${productsCollected.length}/${totalProducts}`);
+    // });
+
+    $('body').on('click', '.add-product-no-barcode', function(e) {
+        if(checkIfAllProductsCollected()) return;
+        let productName
+        if(e.target.tagName == 'IMG') {
+            productName = e.target.parentElement.parentElement.querySelector('p.product-name')?.innerHTML;
+        }
+        else {
+            productName = e.target.parentElement.querySelector('p.product-name')?.innerHTML;
+        }
+        let product = productsToBeCollected.find(p => p.name == productName);
+        if(product) {
+            productsCollected.unshift(product);
+            productsToBeCollected = productsToBeCollected.filter(p => p != product);
+            renderCollectedProducts();
+            renderProductsToBeCollected();
+            $('#products-collected').text(`${productsCollected.length}/${totalProducts}`);
+        }
+        if(checkIfAllProductsCollected()) return;
+
+       
     });
     $('#products-collected-container').on('click', '.return-button', function(e) {
         let productArticle = Number($(this).closest('.container').find('.article').text());
-        let productWithNoBarcodeId = Number($(this).closest('.container').find('.product-id').text());
-        if(productWithNoBarcodeId) {
-            productsCollected = productsCollected.filter(p => p.id != productWithNoBarcodeId);
+        let productWithNoBarcode = $(this).closest('.container').find('.product-name').text();
+        if(productWithNoBarcode) {
+            let productWithNoBarcodeIndex = productsCollected.findIndex(p => p.name == productWithNoBarcode);
+            let product = productsCollected.find(p => p.name == productWithNoBarcode);
+            productsCollected.splice(productWithNoBarcodeIndex, 1);
+            productsToBeCollected.push(product);
+            renderProductsToBeCollected();
             renderCollectedProducts();
           
-            $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+            $('#products-collected').text(`${productsCollected.length}/${totalProducts}`);
             return;
         }
         let product = productsCollected.find(p => p.article == productArticle);
-
         if (product) {
             // Remove product from collected list
             productsCollected = productsCollected.filter(p => p.article != productArticle);
@@ -298,7 +333,7 @@ function renderOrderCollection() {
             renderProductsToBeCollected();
             
             // Update the collected count
-            $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+            $('#products-collected').text(`${productsCollected.length}/${totalProducts}`);
         }
     });
     $('.add-product-manually').on('click', function() {
@@ -322,13 +357,13 @@ function renderCollectedProducts() {
             <div class="bg-white rounded-md flex flex-row justify-between gap-5 p-3 items-center container">
                 <div class="flex flex-row gap-2 items-center ">
                     <img src=${product.img} alt="${product.name}" class="max-w-[100px] max-h-[100px] object-cover">
-                    <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty">${product.name}</p>
+                    <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty product-name">${product.name}</p>
                     <span class="hidden product-id">${product.id}</span>
 
                 </div>
                 <div class="flex flex-col items-center gap-3">
                     ${product.article? `<p class="text-[16px] font-[Rubik] text-nowrap flex flex-nowrap gap-2 text-[#8B9696]">Арт: <span class="font-medium article text-[#252E2D]">${product.article}</span></p>`:''}
-                    <button type="button" class="btn-alt w-[100px] flex justify-center items-center return-button">
+                    <button type="button" class="btn-alt w-[100px] z-10 flex justify-center items-center return-button">
                         <img src="/assets/images/arrow-left.svg" alt="Вернуть">  
                     </button>
                 </div>
@@ -341,12 +376,16 @@ function renderProductsToBeCollected() {
     $('#products-container').empty();
     productsToBeCollected.forEach(product => {
         $('#products-container').append(`
-            <div class="bg-white rounded-md flex flex-row justify-between gap-5 p-3">
+            <div class="bg-white rounded-md flex flex-row justify-between gap-5 p-3 items-center">
                 <div class="flex flex-row gap-2 items-center ">
                     <img src=${product.img} alt="${product.name}" class="max-w-[100px] max-h-[100px] object-cover">
-                    <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty max-w-[70%]">${product.name}</p>
+                    <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty max-w-[70%] product-name">${product.name}</p>
                 </div>
-                <p class="text-[16px] font-[Rubik] text-nowrap flex flex-nowrap gap-2 text-[#8B9696]">Арт: <span class="font-medium text-[#252E2D]">${product.article}</span></p>
+                ${product.article ?
+                `<p class="text-[16px] font-[Rubik] text-nowrap flex flex-nowrap gap-2 text-[#8B9696]">Арт: <span class="font-medium text-[#252E2D]">${product.article}</span></p>`
+                :
+                `<button type="button" class="btn-alt w-[100px] flex items-center justify-center  add-product-no-barcode"><img class="rotate-180" src="/assets/images/arrow-left.svg"/></button>`
+                }
             </div>
         `);
     });
@@ -441,7 +480,7 @@ function orderIsCompleted() {
     if($('.modal').length) return;
     $('body').empty();
     $('body').append(`
-         <div class="bg-[#2135314D] modal absolute top-0 left-0 right-0 bottom-0 z-10 flex flex-col gap-2.5 justify-center items-center">
+         <div class="bg-[#2135314D]  absolute top-0 left-0 right-0 bottom-0 z-10 flex flex-col gap-2.5 justify-center items-center">
             <div  class="bg-white rounded-md flex flex-col gap-5 p-10 max-w-[340px] min-w-[340px] items-center justify-center">
                 <img src="/assets/images/order-complete.svg" class="max-w-[100px] max-h-[100px]" alt="Заказ собран"/>
                 <h2 class="text-lg  text-[#292929] font-[Rubik]">Заказ <span class="font-semibold ">№${orderNum}</span></h2>
@@ -470,7 +509,7 @@ function mock_ResetProducts() {
     productsCollected = [];
     renderProductsToBeCollected();
     renderCollectedProducts();
-    $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+    $('#products-collected').text(`${productsCollected.length}/${totalProducts}`);
 }
 
 function clearProducts() {
@@ -478,43 +517,43 @@ function clearProducts() {
     productsCollected = [];
 }
 
-function addProductsWithNoBarcode() {
-    if($('.modal').length) return;
-    $('body').append(`
-        <div class="bg-[#2135314D] modal absolute top-0 left-0 right-0 bottom-0 z-10 flex justify-center items-center">
-            <form  class="bg-white rounded-md flex flex-col gap-5 p-5 max-w-[800px] min-w-[800px]">
-                <h2 class="text-lg font-semibold text-[#292929] font-[Rubik]">Добавьте товары без штрихкода</h2>
-                <input type="text" class="bg-[#E0F1EC] w-full h-11 rounded-[3px] p-2 font-semibold text-left text-[24px] text-[#292929]" autocomplete="off" autofocus id="search-products-with-no-barcode"/>
+// function addProductsWithNoBarcode() {
+//     if($('.modal').length) return;
+//     $('body').append(`
+//         <div class="bg-[#2135314D] modal absolute top-0 left-0 right-0 bottom-0 z-10 flex justify-center items-center">
+//             <form  class="bg-white rounded-md flex flex-col gap-5 p-5 max-w-[800px] min-w-[800px]">
+//                 <h2 class="text-lg font-semibold text-[#292929] font-[Rubik]">Добавьте товары без штрихкода</h2>
+//                 <input type="text" class="bg-[#E0F1EC] w-full h-11 rounded-[3px] p-2 font-semibold text-left text-[24px] text-[#292929]" autocomplete="off" autofocus id="search-products-with-no-barcode"/>
 
-                <div class="flex flex-col gap-2.5 p-2.5 bg-[#F7F6F5] pb-5 overflow-y-auto max-h-[60svh]" id="products-with-no-barcode-container">
-                </div>
-                <div class="flex flex-row gap-2">
-                    <button type="button" class="btn-primary w-full cancel">Закрыть</button>
-                </div>
-            </form>
-        </div>
-    `);
-    renderProductsNoBarcode(productsWithNoBarcode);
-    $('#search-products-with-no-barcode').focus();
+//                 <div class="flex flex-col gap-2.5 p-2.5 bg-[#F7F6F5] pb-5 overflow-y-auto max-h-[60svh]" id="products-with-no-barcode-container">
+//                 </div>
+//                 <div class="flex flex-row gap-2">
+//                     <button type="button" class="btn-primary w-full cancel">Закрыть</button>
+//                 </div>
+//             </form>
+//         </div>
+//     `);
+//     renderProductsNoBarcode(productsWithNoBarcode);
+//     $('#search-products-with-no-barcode').focus();
    
-}
+// }
 
-function renderProductsNoBarcode(productsWithNoBarcode) {
-    $('#products-with-no-barcode-container').empty();
-    productsWithNoBarcode.forEach(product => {
-        $('#products-with-no-barcode-container').append(`
-            <div class="bg-white rounded-md flex flex-row justify-between gap-5 p-3 items-center product-with-no-barcode">
-                <div class="flex flex-row gap-2 items-center ">
-                    <img src=${product.img} alt="${product.name}" class="max-w-[100px] max-h-[100px] object-cover">
-                    <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty max-w-[70%]">${product.name}</p>
-                    <span class="hidden">${product.id}</span>
-                </div>
-                <button type="button" class="btn-alt w-[200px] h-fit add-product-with-no-barcode">Добавить</button>
+// function renderProductsNoBarcode(productsWithNoBarcode) {
+//     $('#products-with-no-barcode-container').empty();
+//     productsWithNoBarcode.forEach(product => {
+//         $('#products-with-no-barcode-container').append(`
+//             <div class="bg-white rounded-md flex flex-row justify-between gap-5 p-3 items-center product-with-no-barcode">
+//                 <div class="flex flex-row gap-2 items-center ">
+//                     <img src=${product.img} alt="${product.name}" class="max-w-[100px] max-h-[100px] object-cover">
+//                     <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty max-w-[70%]">${product.name}</p>
+//                     <span class="hidden">${product.id}</span>
+//                 </div>
+//                 <button type="button" class="btn-alt w-[200px] h-fit add-product-with-no-barcode">Добавить</button>
 
-            </div>
-        `);
-    });
-}
+//             </div>
+//         `);
+//     });
+// }
 
 
 function checkIfAllProductsCollected() {
