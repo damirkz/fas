@@ -1,0 +1,525 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сбор заказа</title>
+
+    <link rel="stylesheet" href="static/css/output.css">
+    <link rel="stylesheet" href="static/css/index.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="empty-order" class="bg-[#2135314D] w-full h-full flex flex-col justify-center items-center">
+        <form  class="px-10 py-5 rounded-md flex flex-col gap-5 max-w-[360px] bg-white justify-center items-center"  autocomplete="off" >
+            <div class="w-0 overflow-hidden">
+
+                <input type="text" id="order-blank-barcode" class="opacity-0"  autofocus  autocomplete="off" onblur="this.focus()"  >
+            </div>
+            <img src="/assets/images/scanner.svg" alt="Отсканируйте штрихкод бланка заказа для сбора нового заказа" class="max-w-[100px] max-h-[100px]">
+            <p class="text-pretty font-[Inter] text-lg text-center">Отсканируйте штрихкод бланка заказа для сбора нового заказа</p>
+        </form>
+    </div>
+    
+
+   
+</body>
+</html>
+<script>
+let orderNum = ''
+const productsInOrder = [
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir',
+        article: '1',
+        img:'https://picsum.photos/100/100',
+        id:1
+    },
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir',
+        article: '2',
+        img:'https://picsum.photos/100/100',
+        id:2
+    },
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir',
+        article: '3',
+        img:'https://picsum.photos/100/100',
+        id:3
+    },
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir',
+        article: '4',
+        img:'https://picsum.photos/100/100',
+        id:4
+    },
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir',
+        article: '5',
+        img:'https://picsum.photos/100/100',
+        id:5
+    },
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir',
+        article: '6',
+        img:'https://picsum.photos/100/100',
+        id:6
+    },
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir вторая строчка лучший вся семья пользуется собака кошка рыбки дед черви с огорода тоже одобряют',
+        article: '7',
+        img:'https://picsum.photos/100/100',
+        id:7
+    },
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir',
+        article: '8',
+        img:'https://picsum.photos/100/100',
+        id:8
+    },
+    {
+        name: 'OMRON Небулайзер компрессорный C101 - CompAir',
+        article: '9',
+        img:'https://picsum.photos/100/100',
+        id:9
+    },
+    
+]
+const productsWithNoBarcode = [
+    {   
+        name: 'Булочка',
+        img:'https://picsum.photos/100/100',
+        id:1
+    },
+    {
+        name: 'Хлеб',
+        img:'https://picsum.photos/100/100',
+        id:2
+    },
+    {
+        name: 'Молоко',
+        img:'https://picsum.photos/100/100',
+        id:3
+    },
+    {
+        name: 'Сыр',
+        img:'https://picsum.photos/100/100',
+        id:4
+    },
+    {
+        name: 'Колбаса',
+        img:'https://picsum.photos/100/100',
+        id:5
+    },
+    {
+        name: 'Масло',
+        img:'https://picsum.photos/100/100',
+        id:6
+    },
+    {
+        name: 'Сок',
+        img:'https://picsum.photos/100/100',
+        id:7
+    },
+    {
+        name: 'Яйца',
+        img:'https://picsum.photos/100/100',
+        id:8
+    },
+    {
+        name: 'Макароны',
+        img:'https://picsum.photos/100/100',
+        id:9
+    }
+]
+
+function calculateTotalProducts() {
+    const collectedProductsWithNoBarcode = productsCollected.filter(product => !product.article);
+    return productsInOrder.length + collectedProductsWithNoBarcode.length;
+}
+let productsToBeCollected = productsInOrder
+let productsCollected = []
+$(document).ready(function() {
+    $('#order-blank-barcode').on('input', function() {
+        orderNum = $(this).val();
+        $(this).val('');
+        renderOrderCollection();
+        $('#empty-order').remove();
+    });
+
+   
+    
+});
+
+
+
+function renderOrderCollection() {
+    $('body').empty();
+    $('body').append(`
+      <div class="h-full w-full">
+
+        <div class="flex flex-row h-full">
+            <div class="w-full bg-[#F7F6F5] h-full">
+                <div class="flex flex-row gap-1 p-5  bg-[#F7F6F5] h-[92px] items-center"> 
+                    <h1 class="font-[Rubik] text-lg">Заказ </h1>
+                    <span id="order-number" class="font-semibold text-lg font-[Rubik]"></span>
+                </div>
+                <div class="flex flex-col gap-2.5 p-2.5 bg-[#F7F6F5] pb-20 overflow-y-auto max-h-[90svh]" id="products-container">
+                </div>
+            </div>
+            <div class="w-full bg-[#B9E3D4] h-full">
+                <div class="flex flex-row justify-between items-center gap-2 p-5">
+                    <div class="flex flex-row gap-1">
+                        <span class="font-[Rubik] text-lg ">Собрано</span>
+                        <span class="font-semibold font-[Rubik] text-lg" id="products-collected"></span>
+                    </div>
+                    <button type="button" class="btn-alt w-[200px]" id="no-barcode-btn">КАФЕПЛЮС</button>
+
+                    <button type="button" class="btn-primary w-[200px] add-product-manually">Добавить вручную</button>
+                </div>
+                <div class="flex flex-col gap-2.5    overflow-y-auto max-h-[90svh] p-2.5" id="products-collected-container">
+                </div>
+            </div>
+        </div>
+        <form class="absolute top-0 left-0 opacity-0">
+            <input type="text" id="product-barcode" class="opacity-0" onblur="handleFocus()"  autofocus  autocomplete="off" >
+        </form>
+    </div>
+    `);
+    renderProductsToBeCollected();
+    renderCollectedProducts();
+    $('#order-number').text(`№${orderNum}`);
+    $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+    $('#product-barcode').focus();
+    $('#product-barcode').on('input', function() {
+        if(checkIfAllProductsCollected()) return;
+        let barcode = $(this).val();
+        let product = productsInOrder.find(product => product.article == barcode);
+        if(productsCollected.find(product => product.article == barcode)) {
+            alert('Товар уже отсканирован');
+            $(this).val('');
+            return;
+        }
+
+        if(product) {
+            productsCollected.push(product);
+            $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+            productsToBeCollected = productsToBeCollected.filter(product => product.article != barcode);
+            renderCollectedProducts();
+            renderProductsToBeCollected();
+            $(this).val('');
+        }
+        else {
+            productIsNotInOrder();
+        }
+
+        if(checkIfAllProductsCollected()) return;
+
+    });
+    $('body').on('click', '.numpad-number', function() {
+
+        let number = $(this).text();
+        let currentBarcode = $('.manual-barcode').val();
+        $('.manual-barcode').val(currentBarcode + number);
+    });
+
+    $('body').on('click', '#no-barcode-btn', function() {
+        addProductsWithNoBarcode();
+    });
+
+    $('body').on('click', '.reset', function() {
+        $('.manual-barcode').val('');
+    });
+
+    $('body').on('click', '.undo', function() {
+        let currentBarcode = $('.manual-barcode').val();
+        $('.manual-barcode').val(currentBarcode.slice(0, -1));
+    });
+
+    $('body').on('click', '.cancel', function() {
+        closeModal();
+    });
+
+    $('body').on('click', '.add', function() {
+        if(checkIfAllProductsCollected()) return;
+        let barcode = $('.manual-barcode').val();
+        let product = productsInOrder.find(product => product.article == barcode);
+        if(productsCollected.find(product => product.article == barcode)) {
+            alert('Товар уже отсканирован');
+            return;
+        }
+        if(product) {
+            productsCollected.push(product);
+            $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+            productsToBeCollected = productsToBeCollected.filter(product => product.article != barcode);
+            renderCollectedProducts();
+            renderProductsToBeCollected();
+            $('.manual-barcode').val('');
+
+            closeModal();
+        }
+        else {
+            alert('Товар не найден');
+        }
+    });
+
+    $('#search-products-with-no-barcode').on('input', function() {
+        let search = $(this).val().toLowerCase();
+        let filteredProducts = productsWithNoBarcode.filter(product => product.name.toLowerCase().includes(search));
+        renderProductsNoBarcode(filteredProducts);
+    });
+    $('body').on('click', '.add-product-with-no-barcode', function() {
+        let productIndex = $(this).closest('.product-with-no-barcode').index();
+        let product = productsWithNoBarcode[productIndex];
+        console.log(product);
+        productsCollected.push(product);
+        renderCollectedProducts();
+        $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+    });
+    $('#products-collected-container').on('click', '.return-button', function(e) {
+        let productArticle = Number($(this).closest('.container').find('.article').text());
+        let productWithNoBarcodeId = Number($(this).closest('.container').find('.product-id').text());
+        if(productWithNoBarcodeId) {
+            productsCollected = productsCollected.filter(p => p.id != productWithNoBarcodeId);
+            renderCollectedProducts();
+          
+            $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+            return;
+        }
+        let product = productsCollected.find(p => p.article == productArticle);
+
+        if (product) {
+            // Remove product from collected list
+            productsCollected = productsCollected.filter(p => p.article != productArticle);
+            
+            // Add product back to the to-be-collected list
+            productsToBeCollected.push(product);
+            
+            // Re-render the lists
+            renderCollectedProducts();
+            renderProductsToBeCollected();
+            
+            // Update the collected count
+            $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+        }
+    });
+    $('.add-product-manually').on('click', function() {
+        if(checkIfAllProductsCollected()) return;
+        addProductManually();
+    });
+
+    $('body').on('click', '.modal', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+}
+
+
+
+function renderCollectedProducts() {
+    $('#products-collected-container').empty();
+    productsCollected.forEach(product => {
+        $('#products-collected-container').append(`
+            <div class="bg-white rounded-md flex flex-row justify-between gap-5 p-3 items-center container">
+                <div class="flex flex-row gap-2 items-center ">
+                    <img src=${product.img} alt="${product.name}" class="max-w-[100px] max-h-[100px] object-cover">
+                    <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty">${product.name}</p>
+                    <span class="hidden product-id">${product.id}</span>
+
+                </div>
+                <div class="flex flex-col items-center gap-3">
+                    ${product.article? `<p class="text-[16px] font-[Rubik] text-nowrap flex flex-nowrap gap-2 text-[#8B9696]">Арт: <span class="font-medium article text-[#252E2D]">${product.article}</span></p>`:''}
+                    <button type="button" class="btn-alt w-[100px] flex justify-center items-center return-button">
+                        <img src="/assets/images/arrow-left.svg" alt="Вернуть">  
+                    </button>
+                </div>
+            </div>
+        `);
+    });
+}
+
+function renderProductsToBeCollected() {
+    $('#products-container').empty();
+    productsToBeCollected.forEach(product => {
+        $('#products-container').append(`
+            <div class="bg-white rounded-md flex flex-row justify-between gap-5 p-3">
+                <div class="flex flex-row gap-2 items-center ">
+                    <img src=${product.img} alt="${product.name}" class="max-w-[100px] max-h-[100px] object-cover">
+                    <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty max-w-[70%]">${product.name}</p>
+                </div>
+                <p class="text-[16px] font-[Rubik] text-nowrap flex flex-nowrap gap-2 text-[#8B9696]">Арт: <span class="font-medium text-[#252E2D]">${product.article}</span></p>
+            </div>
+        `);
+    });
+} 
+
+function handleFocus() {
+    if($('.modal').length) return;
+    $('#product-barcode').focus();
+}
+
+function closeModal() {
+    $('.manual-barcode').val('');
+    $('.modal').remove();
+    $('#product-barcode').focus();
+    
+}
+
+function addProductManually() {
+    if($('.modal').length) return;
+    $('.manual-barcode').val('');
+    
+    $('body').append(`
+        <div class="bg-[#2135314D] modal absolute top-0 left-0 right-0 bottom-0 z-10 flex justify-center items-center">
+            <form  class="bg-white rounded-md flex flex-col gap-5 p-5 max-w-[400px] min-w-[400px]">
+                <h2 class="text-lg font-semibold text-[#292929] font-[Rubik]">Введите штрихкод товара</h2>
+                <input type="text" class="bg-[#E0F1EC] w-full h-11 rounded-[3px] p-2 font-semibold text-right text-[24px] text-[#292929] manual-barcode"/>
+                <div class="grid grid-cols-3  gap-2">
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">7</button>
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">8</button>
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">9</button>
+
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">4</button>
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">5</button>
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">6</button>
+
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">1</button>
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">2</button>
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">3</button>
+
+                    <button type="button" class="bg-white border-2 reset border-[#6e7473] h-11 w-full rounded-md font-medium text-[16px] font-[Inter] text-[#6e7473] active:brightness-110 hover:brightness-110 focus:brightness-110">Сбросить</button>
+                    <button type="button" class="bg-[#6e7473] numpad-number h-11 w-full rounded-md text-white active:brightness-110 hover:brightness-110 focus:brightness-110">0</button>
+                    <button type="button" class="bg-white border-2 undo border-[#6e7473] flex justify-center items-center h-11 w-full rounded-md text-[#6e7473] active:brightness-110 hover:brightness-110 focus:brightness-110"><img src="/assets/images/undo.svg" alt="Удалить последнее"></button>
+                </div>
+
+                <div class="flex flex-row gap-2">
+                    <button type="button" class="btn-primary w-full add">Добавить</button>
+                    <button type="button" class="btn-alt w-full cancel">Отмена</button>
+                </div>
+            </form>
+        </div>
+    `);
+
+    $('.manual-barcode').focus();
+
+  
+
+}
+
+function productIsNotInOrder(product) {
+    if($('.modal').length) return;
+    $('body').append(`
+        <div class="bg-[#2135314D] modal absolute top-0 left-0 right-0 bottom-0 z-10 flex justify-center items-center">
+            <form  class="bg-white rounded-md flex flex-col gap-5 p-5 max-w-[400px] min-w-[400px]">
+                <h2 class="text-lg font-semibold text-[#292929] font-[Rubik]">Этого товара нет в заказе</h2>
+                <p class="text-[16px] font-[Inter] text-[#292929]">Товар, который вы отсканировали, отсутствует в списке заказа. Может этот товар из другого заказа?</p>
+
+                <div class="flex flex-row gap-2">
+                    <button type="button" class="btn-primary w-full cancel">Закрыть</button>
+                </div>
+            </form>
+        </div>
+    `);
+}
+function scanQrCode() {
+    if($('.modal').length) return;
+    $('body').append(`
+        <div class="bg-[#2135314D] modal absolute top-0 left-0 right-0 bottom-0 z-10 flex justify-center items-center">
+            <form  class="bg-white rounded-md flex flex-col gap-5 p-5 max-w-[400px] min-w-[400px]">
+                <h2 class="text-lg font-semibold text-[#292929] font-[Rubik]">Требуется отсканировать QR-код вместо штрихкода</h2>
+                <p class="text-[16px] font-[Inter] text-[#292929]">Вы уверены, что на пачке отсутствует QR-код?</p>
+
+                 <div class="flex flex-row gap-2">
+                    <button type="button" class="btn-primary w-full ">Сканировать QR</button>
+                    <button type="button" class="btn-alt w-full ">QR отсутствует</button>
+                </div>
+            </form>
+        </div>
+    `);
+}
+
+function orderIsCompleted() {
+    if($('.modal').length) return;
+    $('body').empty();
+    $('body').append(`
+         <div class="bg-[#2135314D] modal absolute top-0 left-0 right-0 bottom-0 z-10 flex flex-col gap-2.5 justify-center items-center">
+            <div  class="bg-white rounded-md flex flex-col gap-5 p-10 max-w-[340px] min-w-[340px] items-center justify-center">
+                <img src="/assets/images/order-complete.svg" class="max-w-[100px] max-h-[100px]" alt="Заказ собран"/>
+                <h2 class="text-lg  text-[#292929] font-[Rubik]">Заказ <span class="font-semibold ">№${orderNum}</span></h2>
+                <span class="text-[#0B7972] text-[28px] font-bold font-[Rubik]">Собран</span>
+            
+            </div>
+            <div  class="bg-white rounded-md flex flex-col gap-5 p-5 max-w-[340px] min-w-[340px] items-center justify-center">
+                <span class="text-lg font-[Inter] text-center text-balance">Отсканируйте штрихкод бланка заказа для сбора нового заказа</span>
+            </div>
+        </div>
+        <input type="text" id="order-complete-blank-barcode" class="opacity-0"  autofocus  autocomplete="off" onblur="this.focus()"  >
+    `);
+    $('#order-complete-blank-barcode').focus();
+    $('#order-complete-blank-barcode').on('input', function() {
+        orderNum = $(this).val();
+        $(this).val('');
+        mock_ResetProducts();
+        // clearProducts();
+        renderOrderCollection();
+    });
+
+}
+
+function mock_ResetProducts() {
+    productsToBeCollected = productsInOrder;
+    productsCollected = [];
+    renderProductsToBeCollected();
+    renderCollectedProducts();
+    $('#products-collected').text(`${productsCollected.length}/${calculateTotalProducts()}`);
+}
+
+function clearProducts() {
+    productsToBeCollected = [];
+    productsCollected = [];
+}
+
+function addProductsWithNoBarcode() {
+    if($('.modal').length) return;
+    $('body').append(`
+        <div class="bg-[#2135314D] modal absolute top-0 left-0 right-0 bottom-0 z-10 flex justify-center items-center">
+            <form  class="bg-white rounded-md flex flex-col gap-5 p-5 max-w-[800px] min-w-[800px]">
+                <h2 class="text-lg font-semibold text-[#292929] font-[Rubik]">Добавьте товары без штрихкода</h2>
+                <input type="text" class="bg-[#E0F1EC] w-full h-11 rounded-[3px] p-2 font-semibold text-left text-[24px] text-[#292929]" autocomplete="off" autofocus id="search-products-with-no-barcode"/>
+
+                <div class="flex flex-col gap-2.5 p-2.5 bg-[#F7F6F5] pb-5 overflow-y-auto max-h-[60svh]" id="products-with-no-barcode-container">
+                </div>
+                <div class="flex flex-row gap-2">
+                    <button type="button" class="btn-primary w-full cancel">Закрыть</button>
+                </div>
+            </form>
+        </div>
+    `);
+    renderProductsNoBarcode(productsWithNoBarcode);
+    $('#search-products-with-no-barcode').focus();
+   
+}
+
+function renderProductsNoBarcode(productsWithNoBarcode) {
+    $('#products-with-no-barcode-container').empty();
+    productsWithNoBarcode.forEach(product => {
+        $('#products-with-no-barcode-container').append(`
+            <div class="bg-white rounded-md flex flex-row justify-between gap-5 p-3 items-center product-with-no-barcode">
+                <div class="flex flex-row gap-2 items-center ">
+                    <img src=${product.img} alt="${product.name}" class="max-w-[100px] max-h-[100px] object-cover">
+                    <p class=" text-[16px] font-[Inter] text-[#292929] text-pretty max-w-[70%]">${product.name}</p>
+                    <span class="hidden">${product.id}</span>
+                </div>
+                <button type="button" class="btn-alt w-[200px] h-fit add-product-with-no-barcode">Добавить</button>
+
+            </div>
+        `);
+    });
+}
+
+
+function checkIfAllProductsCollected() {
+    if(productsInOrder.length == productsCollected.length && productsToBeCollected.length == 0) {
+        orderIsCompleted();
+    }
+}
+</script>

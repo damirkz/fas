@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.btn-primary {
+    background-color: #0b7972;
+    color:white;
+    border-radius: 5px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+}
+.btn-primary:hover {
+    filter:brightness(1.1)
+}
+
+.btn-alt {
+    background-color: white;
+    color: #0b7972;
+    border-radius: 5px;
+    padding: 12px;
+    border:2px solid #0b7972;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+
+}
+.btn-alt:hover {
+    background-color: #def8f6;
+}
